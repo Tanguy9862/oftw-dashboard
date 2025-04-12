@@ -1,0 +1,11 @@
+body {
+    /*background-color: #FFFBEB*/
+    background-color: #EDF2F7
+    /*background-color: white*/
+}
+
+#fig-line-chart .hoverlayer .bg {
+    rx: 4;
+    shape-rendering: auto;
+    boxShadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+}

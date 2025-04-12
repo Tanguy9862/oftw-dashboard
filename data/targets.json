@@ -1,0 +1,184 @@
+{
+    "2025": {
+        "money_moved": {
+            "target_annual": 1800000,
+            "quarter_proportion_civil": {
+                "1": 19.9,
+                "2": 18.3,
+                "3": 19.6,
+                "4": 42.1
+            },
+            "quarter_proportion_fiscal": {
+                "1": 16.3,
+                "2": 37.4,
+                "3": 24.2,
+                "4": 22.1
+            }
+        },
+        "counterfactual_mm": {
+            "target_annual": 1260000,
+            "quarter_proportion_civil": {
+                "1": 19.5,
+                "2": 18.4,
+                "3": 19.5,
+                "4": 42.5
+            },
+            "quarter_proportion_fiscal": {
+                "1": 16.4,
+                "2": 38.6,
+                "3": 23.4,
+                "4": 21.7
+            }
+        },
+        "active_arr": {
+            "target_annual": 1200000,
+            "quarter_proportion_civil": {
+                "1": 19.9,
+                "2": 18.3,
+                "3": 19.6,
+                "4": 42.1
+            },
+            "quarter_proportion_fiscal": {
+                "1": 16.3,
+                "2": 37.4,
+                "3": 24.2,
+                "4": 22.1
+            }
+        },
+        "pledge_attrition_rate": {
+            "target_annual": 18,
+            "quarter_proportion_civil": {
+                "1": 21.6,
+                "2": 24.5,
+                "3": 24.5,
+                "4": 29.4
+            },
+            "quarter_proportion_fiscal": {
+                "1": 20.6,
+                "2": 25.6,
+                "3": 25.0,
+                "4": 28.9
+            }
+        },
+        "total_active_donors": {
+            "target_annual": 1200,
+            "quarter_proportion_civil": {
+                "1": 21.4,
+                "2": 24.6,
+                "3": 25.2,
+                "4": 28.8
+            },
+            "quarter_proportion_fiscal": {
+                "1": 21.6,
+                "2": 25.5,
+                "3": 24.3,
+                "4": 28.6
+            }
+        },
+        "total_active_pledges": {
+            "target_annual": 850,
+            "quarter_proportion_civil": {
+                "1": 21.4,
+                "2": 24.6,
+                "3": 25.2,
+                "4": 28.8
+            },
+            "quarter_proportion_fiscal": {
+                "1": 21.6,
+                "2": 25.5,
+                "3": 24.3,
+                "4": 28.6
+            }
+        },
+        "all_pledges": {
+            "target_annual": 1850,
+            "quarter_proportion_civil": {
+                "1": 21.4,
+                "2": 24.6,
+                "3": 25.2,
+                "4": 28.8
+            },
+            "quarter_proportion_fiscal": {
+                "1": 21.6,
+                "2": 25.5,
+                "3": 24.3,
+                "4": 28.6
+            }
+        },
+        "future_pledges": {
+            "target_annual": 1000,
+            "quarter_proportion_civil": {
+                "1": 21.4,
+                "2": 24.6,
+                "3": 25.2,
+                "4": 28.8
+            },
+            "quarter_proportion_fiscal": {
+                "1": 21.6,
+                "2": 25.5,
+                "3": 24.3,
+                "4": 28.6
+            }
+        },
+        "active_pledges": {
+            "target_annual": 850,
+            "quarter_proportion_civil": {
+                "1": 21.4,
+                "2": 24.6,
+                "3": 25.2,
+                "4": 28.8
+            },
+            "quarter_proportion_fiscal": {
+                "1": 21.6,
+                "2": 25.5,
+                "3": 24.3,
+                "4": 28.6
+            }
+        },
+        "all_arr": {
+            "target_annual": 1800000,
+            "quarter_proportion_civil": {
+                "1": 19.9,
+                "2": 18.3,
+                "3": 19.6,
+                "4": 42.1
+            },
+            "quarter_proportion_fiscal": {
+                "1": 16.3,
+                "2": 37.4,
+                "3": 24.2,
+                "4": 22.1
+            }
+        },
+        "future_arr": {
+            "target_annual": 600000,
+            "quarter_proportion_civil": {
+                "1": 19.9,
+                "2": 18.3,
+                "3": 19.6,
+                "4": 42.1
+            },
+            "quarter_proportion_fiscal": {
+                "1": 16.3,
+                "2": 37.4,
+                "3": 24.2,
+                "4": 22.1
+            }
+        },
+        "monthly_attrition": {
+            "target_annual": 18,
+            "quarter_proportion_civil": {
+                "1": 21.6,
+                "2": 24.5,
+                "3": 24.5,
+                "4": 29.4
+            },
+            "quarter_proportion_fiscal": {
+                "1": 20.6,
+                "2": 25.6,
+                "3": 25.0,
+                "4": 28.9
+            }
+        }
+    }
+}
