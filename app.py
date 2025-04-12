@@ -146,6 +146,7 @@ app.layout = dmc.MantineProvider(
                                                 {'value': str(year), 'label': str(year)}
                                                 for year in range(YEAR_MIN, YEAR_MAX + 1)
                                             ],
+                                            clearable=False
                                         ),
                                         dmc.Select(
                                             label=None,
@@ -157,6 +158,7 @@ app.layout = dmc.MantineProvider(
                                                 *[{'value': 'all', 'label': 'All Quarters'}],
                                                 *[{'value': str(i), 'label': f'Q{i}'} for i in range(1, 5)]
                                             ],
+                                            clearable=False
                                         ),
                                     ],
                                     mt=-40,
@@ -191,17 +193,38 @@ app.layout = dmc.MantineProvider(
                                                     order=4,
                                                     id='title-breakdown',
                                                     c=HEADER_COLOR,
-                                                    style={'width': '60%'}
+                                                    style={'width': '40%'}
                                                 ),
-                                                dmc.Select(
-                                                    value='platform',
-                                                    data=[
-                                                        {'value': 'platform', 'label': 'Payment Platform'},
-                                                        {'value': 'chapter', 'label': 'Chapter Type'},
-                                                        {'value': 'channel', 'label': 'Channel'},
-                                                        {'value': 'recurring', 'label': 'Reoccuring v. One-Time'},
+                                                dmc.Group(
+                                                    [
+                                                        dmc.Select(
+                                                            value='platform',
+                                                            data=[
+                                                                {'value': 'platform', 'label': 'Payment Platform'},
+                                                                {'value': 'chapter', 'label': 'Chapter Type'},
+                                                                {'value': 'channel', 'label': 'Channel'},
+                                                                {'value': 'recurring',
+                                                                 'label': 'Reoccuring v. One-Time'},
+                                                            ],
+                                                            style={'width': '55%'},
+                                                            clearable=False,
+                                                            id='breakdown-dropdown-category'
+                                                        ),
+                                                        dmc.Select(
+                                                            value='5',
+                                                            data=[
+                                                                {'value': '5', 'label': '5'},
+                                                                {'value': '10', 'label': '10'},
+                                                                {'value': 'all', 'label': 'All'},
+                                                            ],
+                                                            # w=10,
+                                                            clearable=False,
+                                                            style={'width': '20%'},
+                                                            id='breakdown-dropdown-top'
+                                                        )
                                                     ],
-                                                    id='breakdown-dropdown'
+                                                    justify='flex-end',
+                                                    style={'width': '55%'}
                                                 )
                                             ],
                                             mb='lg',
@@ -481,9 +504,6 @@ def update_bullet_graph(
         metric_layout=attrition_metric_panel_layout
     )
 
-    # print(f'Metric={metric.name} | Current value={metric.value} | Previous value={metric.previous_value} | PCT diff={metric.delta_pct}')
-    #         print(f'Metric={self.name} | Unit={self.unit} | Current value={self.value} | Previous value={self.previous_value} | PCT diff={self.delta_pct}')
-
     return (
         financial_metric_panel_layout,
         donor_engagement_metric_panel_layout,
@@ -557,6 +577,7 @@ def update_line_fig(
                 df=df_series,
                 x_axis_value='month_order',
                 x_axis_text='month_label',
+                selected_quarter=selected_quarter,
                 annotation_args={
                     'year_mode': year_mode,
                     'selected_year': selected_year,
@@ -573,6 +594,7 @@ def update_line_fig(
                 x_axis_value='weeks_elapsed',
                 x_axis_text='weeks_label',
                 x_axis_title='Weeks Elapsed',
+                selected_quarter=selected_quarter,
                 annotation_args={
                     'year_mode': year_mode,
                     'selected_year': selected_year,
@@ -598,7 +620,8 @@ def update_line_fig(
 @callback(
     Output('breakdown-bar-chart', 'figure'),
     Output('title-breakdown', 'children'),
-    Input('breakdown-dropdown', 'value'),
+    Input('breakdown-dropdown-category', 'value'),
+    Input('breakdown-dropdown-top', 'value'),
     Input('active-metric-slug', 'data'),
     State('select-year', 'value'),
     State('segmented-control-year-mode', 'value'),
@@ -608,6 +631,7 @@ def update_line_fig(
 )
 def update_breakdown_chart(
         selected_filter: str,
+        n_values: str,
         metric_slug,
         selected_year: str,
         year_mode: str,
@@ -652,6 +676,10 @@ def update_breakdown_chart(
         # Clean display (e.g. remove empty values)
         df_breakdown = df_breakdown[df_breakdown[group_col].notna()]
         df_breakdown = df_breakdown.sort_values('value', ascending=False)
+
+        # Limit the number of displayed categories to the top N (e.g., top 5 or 10 values)
+        if n_values in ['5', '10']:
+            df_breakdown = df_breakdown.head(int(n_values))
 
         # Fig
         fig = make_breakdown_bar_chart(

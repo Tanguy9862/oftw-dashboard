@@ -9,7 +9,7 @@ TRANSPARENT = 'rgba(0,0,0,0)'
 
 # Axes & grid
 AXIS_TICKFONTCOLOR = '#9CA3AF'
-XAXIS_LINECOLOR = '#D1D5DB'
+AXIS_LINECOLOR = '#D1D5DB'
 GRID_COLOR = '#E5E7EB'
 LEGEND_COLOR = '#374151'
 BORDER_COLOR = '#9CA3AF'
@@ -21,7 +21,7 @@ TITLE_COLOR = '#0A192F'
 # Mapping with line colors for time series chart (or index chart)
 LINE_STYLES = {
     'Current Year': dict(color=BLUE, width=2, dash='solid'),
-    'Current Quarter': dict(color=BLUE, width=3, dash='solid'),
+    'Current Quarter': dict(color=BLUE, width=2, dash='solid'),
     'Previous Year': dict(color=BLUE, width=1, dash='dash'),
     'Previous Quarter': dict(color=BLUE, width=1, dash='dash'),
     'Same Quarter Last Year': dict(color=PURPLE, width=1, dash='dot'),

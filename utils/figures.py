@@ -13,8 +13,8 @@ from constants.colors import (
     LINE_STYLES,
     TRANSPARENT, PURPLE, BLUE,
     COLOR_POSITIVE, COLOR_NEGATIVE, COLOR_NEUTRAL,
-    AXIS_TICKFONTCOLOR, XAXIS_LINECOLOR, GRID_COLOR, LEGEND_COLOR,
-    HEADER_COLOR, BORDER_COLOR
+    AXIS_TICKFONTCOLOR, AXIS_LINECOLOR, GRID_COLOR, LEGEND_COLOR,
+    HEADER_COLOR, BORDER_COLOR, TITLE_COLOR
 )
 from constants.charts import DEFAULT_PADDING, HOVERLABEL_TEMPLATE, BAR_CORNER_RADIUS, BAR_WIDTH
 
@@ -135,7 +135,7 @@ def make_target_bar_chart(
 
     # Layout settings
     fig.update_layout(
-        height=30,
+        # height=60,
         margin=dict(l=0, r=0, t=0, b=0),
         xaxis=dict(range=[0, 1.1], visible=False),
         yaxis=dict(visible=False, range=[-0.5, 0.5]),
@@ -241,25 +241,47 @@ def make_timeseries_chart(
         df: pd.DataFrame,
         x_axis_value: str,
         x_axis_text: str,
+        selected_quarter: str,
         x_axis_title: Optional[str] = None,
         annotation_args: Optional[dict] = None,
 ):
-
     # Initialize chart with line fig
     fig = go.Figure()
     for period in df['period'].unique():
-        # df_period = df[df['period'] == period]
         df_period = df.query("period == @period")
         style = LINE_STYLES.get(period, dict(color='gray', width=1.5, dash='solid'))  # get line color, default to
         # gray (useful if later we want to add old lines like years ago).
 
-        fig.add_trace(go.Scatter(
-            x=df_period[x_axis_value],
-            y=df_period['value'],
-            mode='lines',
-            name=period,
-            line=style,
-        ))
+        # Determine if the line is from the current period to apply a specific colorscale
+        current_period = period.split()[0] == 'Current'
+
+        if current_period and selected_quarter == 'all':
+            colorscale = [(0.0, 'rgba(255, 255, 255, 0.1)'), (1.0, "rgba(67, 53, 167, 0.5)")]
+        elif current_period and selected_quarter != 'all':
+            colorscale = [
+                (0.0, 'rgba(255, 255, 255, 0.1)'),
+                (0.5, "rgba(67, 53, 167, 0.3)"),
+                (0.75, "rgba(67, 53, 167, 0.4)"),
+                (1.0, "rgba(67, 53, 167, 0.5)")
+            ]
+        else:
+            colorscale = None
+
+        fig.add_trace(
+            go.Scatter(
+                x=df_period[x_axis_value],
+                y=df_period['value'],
+                mode='lines',
+                name=period,
+                line=style,
+                fill='tozeroy' if current_period else None,
+                fillgradient=dict(
+                    type="vertical",
+                    colorscale=colorscale
+                )
+                if current_period else None
+            )
+        )
 
     # Figure layout
     fig.update_layout(
@@ -269,10 +291,10 @@ def make_timeseries_chart(
             ticktext=df[x_axis_text].unique(),
             showgrid=False,
             showline=True,
-            linecolor=XAXIS_LINECOLOR,
+            linecolor=AXIS_LINECOLOR,
             tickfont=dict(color=AXIS_TICKFONTCOLOR),
             title=dict(text=x_axis_title, font=dict(color=AXIS_TICKFONTCOLOR)),
-            spikecolor=XAXIS_LINECOLOR
+            spikecolor=AXIS_LINECOLOR
         ),
         yaxis=dict(
             showgrid=True,
@@ -291,7 +313,8 @@ def make_timeseries_chart(
             font=dict(color=LEGEND_COLOR)
         ),
         margin=DEFAULT_PADDING,
-        hoverlabel=HOVERLABEL_TEMPLATE,
+        hoverlabel={'namelength': -1, **HOVERLABEL_TEMPLATE},  # namelength to prevent the text on hover to be
+        # truncated
         hovermode='x unified'
     )
 
@@ -299,18 +322,72 @@ def make_timeseries_chart(
 
 
 @apply_chart_styling
-def make_breakdown_bar_chart(df: pd.DataFrame, metric: Metric, group_col):
+def make_breakdown_bar_chart(df: pd.DataFrame, metric: Metric, group_col) -> go.Figure:
+    """
+    Creates a horizontal bar chart showing the breakdown of a metric by a specified group.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        A dataframe containing two key columns:
+        - 'value': the numerical value to plot
+        - group_col: the grouping dimension (e.g., platform, chapter, channel)
+
+    metric : Metric
+        The Metric object that includes the unit and formatting logic to apply to the values.
+
+    group_col : str
+        The name of the column used for grouping (displayed on the y-axis).
+
+    Returns
+    -------
+    go.Figure
+        A Plotly Figure object representing a styled horizontal bar chart with custom hover labels
+        and text formatting. The top bar (first row) is styled differently to highlight it.
+    """
+
+    # Format text for each bar using the metric's unit
+    df['formatted_text'] = df['value'].apply(lambda x: format_metric_value(x, metric.unit))
+    df['color'] = [COLOR_POSITIVE] + [BLUE] * (len(df) - 1)
+
     fig = px.bar(
         df,
         x='value',
         y=group_col,
         orientation='h',
+        text='formatted_text',
+        color='color',
+        color_discrete_map='identity'
     )
 
     fig.update_layout(
-        yaxis=dict(categoryorder='total ascending', title=None),
+        yaxis=dict(
+            showline=False,
+            showgrid=False,
+            categoryorder='total ascending',
+            title=None,
+            showspikes=False
+        ),
+        xaxis=dict(
+            showgrid=True,
+            gridcolor=GRID_COLOR,
+            zeroline=False,
+            showticklabels=False,
+            title=None,
+        ),
+        hovermode='y unified',
+        hoverlabel=HOVERLABEL_TEMPLATE,
         barcornerradius=BAR_CORNER_RADIUS,
-        margin=DEFAULT_PADDING
+        margin=dict(l=DEFAULT_PADDING['l'], r=60, t=DEFAULT_PADDING['t'], b=DEFAULT_PADDING['b'], pad=DEFAULT_PADDING['pad'])
+    )
+
+    fig.update_traces(
+        hovertemplate="<b>%{customdata[0]}</b>",
+        customdata=df[['formatted_text']],
+        textposition='outside',
+        cliponaxis=False,
+        marker=dict(line=dict(width=None)),
+        width=0.7  # bar width
     )
 
     return fig
