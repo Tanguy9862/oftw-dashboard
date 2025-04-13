@@ -15,3 +15,6 @@ SHADOW = {"boxShadow": "0px 4px 20px rgba(0, 0, 0, 0.1)"}
 # No data available layout
 NO_ENOUGH_DATA_LAYOUT = dmc.Text('No enough data available.', c='dimmed', ta='center', size='sm')
 
+GITHUB = 'https://github.com/Tanguy9862/oftw-dashboard'
+GITHUB_ICON_WIDTH = 30
+

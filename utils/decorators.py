@@ -5,23 +5,6 @@ from constants.colors import BLUE, BORDER_COLOR
 from typing import Callable
 
 
-def apply_chart_styling(fn):
-
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        fig = fn(*args, **kwargs)
-
-        # STYLE TO UPDATE
-        fig.update_layout(
-            paper_bgcolor=TRANSPARENT,
-            plot_bgcolor=TRANSPARENT
-        )
-
-        return fig
-
-    return wrapper
-
-
 def add_period(fn: Callable) -> Callable:
     """
     Decorator that appends a 'period' column to the returned DataFrame

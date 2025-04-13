@@ -1,11 +1,10 @@
-import time
-
 import dash
 import dash_mantine_components as dmc
 import pandas as pd
 import plotly.graph_objs as go
 from dash import html, dcc, callback, Input, Output, State, ALL
 from dash.exceptions import PreventUpdate
+from dash_iconify import DashIconify
 from typing import Union
 
 # Import Constants
@@ -16,7 +15,8 @@ from constants.metrics import (
 from constants.time import YEAR_MIN, YEAR_MAX, today
 from constants.ui import (
     METRIC_PANEL_SIZE_COL, CHART_PANEL_SIZE_COL, OFFSET_COL,
-    SHADOW, HEIGHT_RIGHT_CHART, NO_ENOUGH_DATA_LAYOUT
+    SHADOW, HEIGHT_RIGHT_CHART, NO_ENOUGH_DATA_LAYOUT,
+    GITHUB, GITHUB_ICON_WIDTH
 )
 from constants.colors import HEADER_COLOR, COLOR_POSITIVE, COLOR_NEUTRAL, COLOR_NEGATIVE, TITLE_COLOR
 from constants.charts import FIG_CONFIG
@@ -47,7 +47,21 @@ pd.set_option('display.max_rows', None)
 
 app = dash.Dash(
     __name__,
-    title="OFTW Dashboard",
+    title="OFTW Dashboard – Donor Performance Insights",
+    update_title=None,
+    meta_tags=[
+        {
+            "name": "description",
+            "content": (
+                "Interactive analytics dashboard developed by Tanguy Surowiec "
+                "for One For The World (OFTW), enabling real-time tracking of key donor engagement "
+                "and fundraising metrics. Built to monitor donation flows, pledge activity, "
+                "revenue projections, and performance against fiscal and calendar year targets."
+            )
+        },
+        {"name": "author", "content": "Tanguy Surowiec"},
+        {"name": "viewport", "content": "width=device-width, initial-scale=1.0"},
+    ],
     suppress_callback_exceptions=True
 )
 
@@ -64,18 +78,59 @@ app.layout = dmc.MantineProvider(
                 dmc.GridCol(
                     span={'md': METRIC_PANEL_SIZE_COL + (2 * OFFSET_COL)},
                     style={
-                        # 'border': 'solid 1px black',
+                        # 'border': 'solid 1px red',
                         'background-color': HEADER_COLOR,
-                        'height': '190px',
+                        # 'height': '190px',
                         # "borderBottom": "2px solid #14B8A6"
-                    }
+                    },
+                    className='left-header'
                 ),
                 dmc.GridCol(
-                    dmc.Title('OFTW', order=1, c='white'),
-                    span='auto',
+                    [
+                        dmc.Flex(
+                            [
+                                dmc.Stack(
+                                    [
+                                        dmc.Image(src='assets/images/logo.png', alt='OFTW Logo', w=200),
+                                        dmc.Box(
+                                            [
+                                                dmc.Title(
+                                                    'Scaling the effective giving movement addressing extreme poverty',
+                                                    order=5,
+                                                    c='rgba(255, 255, 255, 0.7)',
+                                                    fw=400
+                                                ),
+                                                dmc.Text(f'Last update: {today.date()}', c='rgba(255, 255, 255, 0.5)'),
+                                            ],
+                                            ml=7
+                                        )
+                                    ],
+                                    style={'width': '95%'},
+                                    gap=0,
+                                ),
+                                dmc.Anchor(
+                                    [
+                                        DashIconify(icon='uil:github', color='rgba(255, 255, 255, 0.8)', width=GITHUB_ICON_WIDTH),
+                                    ],
+                                    style={
+                                        'width': '5%',
+                                    },
+                                    href=GITHUB
+                                )
+                            ],
+                            mt='xs',
+                            justify='space-around'
+                        )
+                    ],
+                    span={
+                        'md': CHART_PANEL_SIZE_COL
+                    },
+                    className='right-header',
                     style={'background-color': HEADER_COLOR, 'height': '190px'}
-                )
+                ),
+                dmc.GridCol(span='auto', style={'background-color': HEADER_COLOR}, className='left-header')
             ],
+            # mb='xl',
             gutter=0
         ),
         dmc.Grid(
@@ -220,7 +275,8 @@ app.layout = dmc.MantineProvider(
                                         ),
                                         dcc.Loading(
                                             [html.Div(id='times-series-chart-container')],
-                                            overlay_style={"visibility": "visible", "opacity": .6, "backgroundColor": "white"},
+                                            overlay_style={"visibility": "visible", "opacity": .6,
+                                                           "backgroundColor": "white"},
                                             type='circle',
                                             color=HEADER_COLOR
                                         )
@@ -282,7 +338,8 @@ app.layout = dmc.MantineProvider(
                                         ),
                                         dcc.Loading(
                                             [html.Div(id='breakdown-chart-container')],
-                                            overlay_style={"visibility": "visible", "opacity": .6, "backgroundColor": "white"},
+                                            overlay_style={"visibility": "visible", "opacity": .6,
+                                                           "backgroundColor": "white"},
                                             type='circle',
                                             color=HEADER_COLOR
                                         )

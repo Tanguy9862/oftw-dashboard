@@ -75,8 +75,6 @@ def add_header_to_panel(
     return [
         dmc.Grid(
             [
-                # dmc.GridCol(dmc.Text('Metric Name', ta='center'), span=1.5),
-                # dmc.GridCol(dmc.Text('Target', ta='center'), span=6),
                 dmc.GridCol(
                     dmc.Text(
                         f'% Change vs. {year_mode.upper()} {year} {quarter or ""}',

@@ -272,6 +272,3 @@ def format_metric_value(value: float, unit: str) -> str:
             return f"{round(value / 1_000, 1)}K{unit}"
         else:
             return f"{int(round(value)):,}{unit}"
-
-def get_color_based_on_status():
-    return None

@@ -7,7 +7,7 @@ from typing import Optional
 
 from utils.metrics_engine import Metric
 from utils.helpers import format_metric_value
-from utils.decorators import apply_chart_styling, with_annotation
+from utils.decorators import with_annotation
 
 from constants.colors import (
     LINE_STYLES,
@@ -63,12 +63,13 @@ def build_value_only_chart(value: float, unit: str = "") -> go.Figure:
         xaxis=dict(range=[0, 1.1], visible=False),
         yaxis=dict(visible=False, range=[-0.5, 0.5]),
         showlegend=False,
+        plot_bgcolor=TRANSPARENT,
+        paper_bgcolor=TRANSPARENT
     )
 
     return fig
 
 
-@apply_chart_styling
 def make_target_bar_chart(
         metric_name,
         value,
@@ -205,7 +206,6 @@ def make_target_bar_chart(
     return fig
 
 
-@apply_chart_styling
 def make_delta_bar_chart(metric: Metric) -> go.Figure:
     """
     Generates a relative horizontal bar chart to visualize the difference between
@@ -288,7 +288,6 @@ def make_delta_bar_chart(metric: Metric) -> go.Figure:
     return fig
 
 
-@apply_chart_styling
 @with_annotation
 def make_timeseries_chart(
         df: pd.DataFrame,
@@ -365,6 +364,8 @@ def make_timeseries_chart(
             title=None,
             font=dict(color=LEGEND_COLOR)
         ),
+        paper_bgcolor=TRANSPARENT,
+        plot_bgcolor=TRANSPARENT,
         margin=DEFAULT_PADDING,
         hoverlabel={'namelength': -1, **HOVERLABEL_TEMPLATE},  # namelength to prevent the text on hover to be
         # truncated
@@ -374,7 +375,6 @@ def make_timeseries_chart(
     return fig
 
 
-@apply_chart_styling
 def make_breakdown_bar_chart(df: pd.DataFrame, metric: Metric, group_col) -> go.Figure:
     """
     Creates a horizontal bar chart showing the breakdown of a metric by a specified group.
@@ -428,6 +428,8 @@ def make_breakdown_bar_chart(df: pd.DataFrame, metric: Metric, group_col) -> go.
             showticklabels=False,
             title=None,
         ),
+        plot_bgcolor=TRANSPARENT,
+        paper_bgcolor=TRANSPARENT,
         hovermode='y unified',
         hoverlabel=HOVERLABEL_TEMPLATE,
         barcornerradius=BAR_CORNER_RADIUS,

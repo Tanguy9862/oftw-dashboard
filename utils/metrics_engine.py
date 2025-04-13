@@ -338,4 +338,3 @@ class ARRMetric(TimeSeriesMixin, Metric):
         df['value'] = df.apply(lambda x: FREQ_MULTIPLIER.get(x['frequency'], 0) * x['amount_usd'], axis=1)
 
         return df.groupby(group_cols)['value'].sum().reset_index()
-

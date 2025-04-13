@@ -14,4 +14,18 @@ body {
     shape-rendering: auto;
 }
 
+.left-header {
+    height: 190px;
+}
+
+@media (max-width: 767px) {
+    .left-header {
+        height: 0;
+    }
+
+    .right-header {
+        margin-bottom: 80px;
+    }
+}
+
 
