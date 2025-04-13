@@ -40,6 +40,7 @@ from utils.metric_panel_layout import (
     make_color_legend,
     make_line_legend
 )
+from utils.modal import make_modal
 
 # Pandas config
 pd.set_option('display.max_columns', None)
@@ -71,6 +72,7 @@ app.layout = dmc.MantineProvider(
             href="https://fonts.googleapis.com/css2?family=Palanquin:wght@400;500;600;700&display=swap",
             rel="stylesheet"
         ),
+        make_modal(),
         dcc.Store('payments-pledges-data'),
         dcc.Store('active-metric-slug'),
         dmc.Grid(
@@ -78,10 +80,7 @@ app.layout = dmc.MantineProvider(
                 dmc.GridCol(
                     span={'md': METRIC_PANEL_SIZE_COL + (2 * OFFSET_COL)},
                     style={
-                        # 'border': 'solid 1px red',
                         'background-color': HEADER_COLOR,
-                        # 'height': '190px',
-                        # "borderBottom": "2px solid #14B8A6"
                     },
                     className='left-header'
                 ),
@@ -110,10 +109,11 @@ app.layout = dmc.MantineProvider(
                                 ),
                                 dmc.Anchor(
                                     [
-                                        DashIconify(icon='uil:github', color='rgba(255, 255, 255, 0.8)', width=GITHUB_ICON_WIDTH),
+                                        DashIconify(icon='uil:github', color='rgba(255, 255, 255, 0.8)',
+                                                    width=GITHUB_ICON_WIDTH),
                                     ],
                                     style={
-                                        'width': '5%',
+                                        'width': 'auto',
                                     },
                                     href=GITHUB
                                 )
@@ -139,7 +139,21 @@ app.layout = dmc.MantineProvider(
                     [
                         dmc.Box(
                             [
-                                dmc.Title('Are we on pace to reach our goals?', c=HEADER_COLOR, order=3),
+                                dmc.Flex(
+                                    [
+                                        dmc.Title(
+                                            'Are we on pace to reach our goals?', c=HEADER_COLOR, order=3,
+                                            style={'width': '100%'}
+                                        ),
+                                        dmc.ActionIcon(
+                                            DashIconify(icon='ph:question-bold', width=25, color=HEADER_COLOR),
+                                            variant='transparent',
+                                            style={'width': 'auto'},
+                                            id='about-data-source'
+                                        ),
+                                    ],
+                                    justify='space-around'
+                                ),
                                 dmc.Group(
                                     [
                                         dmc.Group(
@@ -184,7 +198,9 @@ app.layout = dmc.MantineProvider(
                                         *create_subcategory_layout(
                                             container_id='attrition-metric-panel-container',
                                             subcategory_title='Attrition',
-                                            annotation_text='Less is better!'
+                                            annotation_text='Less is better',
+                                            label_tooltip="Shows the absolute change in percentage points (pp) from the previous period."
+                                                          " For example, 12% → 9% = -3pp."
                                         ),
                                     ],
                                     overlay_style={"visibility": "visible", "opacity": .6, "backgroundColor": "white"},

@@ -3,6 +3,7 @@ import pandas as pd
 from dash import dcc, html
 from typing import Optional
 from plotly.graph_objs import Figure
+from dash_iconify import DashIconify
 
 from utils.metrics_engine import Metric
 from utils.figures import make_target_bar_chart, make_delta_bar_chart
@@ -47,13 +48,43 @@ def create_subcategory_layout(
         container_id,
         subcategory_title: str,
         annotation_text: Optional[str] = None,
-        is_first_category: bool = False
+        is_first_category: bool = False,
+        label_tooltip: Optional[str] = None
 ) -> list:
+
+    if label_tooltip:
+        tooltip = dmc.Tooltip(
+            [
+                dmc.ActionIcon(
+                    DashIconify(icon='ph:question-light', width=18, color='gray'),
+                    variant='transparent',
+                )
+            ],
+            w=200,
+            multiline=True,
+            withArrow=True,
+            transitionProps={
+                "transition": "fade",
+                "duration": 200,
+                "timingFunction": "ease"
+            },
+            label=label_tooltip
+        )
+    else:
+        tooltip = None
+
     return [
         dmc.Group(
             [
                 dmc.Title(subcategory_title, order=4, c=TITLE_COLOR),
-                dmc.Text(annotation_text, c='dimmed', mt=2),
+                dmc.Group(
+                    [
+                        dmc.Text(annotation_text, c='dimmed'),
+                        tooltip
+                    ],
+                    gap=1,
+                    mt=3
+                )
             ],
             mt='lg',
             mb=0 if is_first_category else 'sm',

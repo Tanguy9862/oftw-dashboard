@@ -24,8 +24,28 @@ body {
     }
 
     .right-header {
-        margin-bottom: 80px;
+        margin-bottom: 95px;
     }
 }
+
+@media (max-width: 991px) {
+    .left-header {
+        height: 0;
+    }
+
+    .right-header {
+        margin-bottom: 95px;
+    }
+}
+
+h2 {
+    color: #172B4D;
+}
+
+h2 {
+    color: #0A192F;
+}
+
+
 
 
