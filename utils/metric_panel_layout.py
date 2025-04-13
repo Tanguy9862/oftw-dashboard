@@ -1,7 +1,7 @@
 import dash_mantine_components as dmc
 import pandas as pd
 from dash import dcc, html
-from typing import Union, Optional
+from typing import Optional
 from plotly.graph_objs import Figure
 
 from utils.metrics_engine import Metric
@@ -9,43 +9,54 @@ from utils.figures import make_target_bar_chart, make_delta_bar_chart
 
 from constants.charts import FIG_CONFIG, HEIGHT_METRIC_BAR_CHART
 from constants.colors import TITLE_COLOR
-from constants.ui import MARGIN_BOTTOM_METRIC
+from constants.ui import NO_ENOUGH_DATA_LAYOUT
 
 
-NO_ENOUGH_DATA_LAYOUT = dmc.Text('No enough data available.', c='dimmed', ta='center')
-
-
-def create_white_card(
-        children: list,
-        mt: Optional[int] = None,
-        padding: Optional[int] = 25
-) -> dmc.Container:
-    return dmc.Container(
+def make_color_legend(label: str, color: str) -> html.Div:
+    return dmc.Group(
         [
-            children
+            html.Div(style={
+                'height': '15px',
+                'width': '15px',
+                'border-radius': '50%',
+                'background-color': color,
+            }),
+            dmc.Text(label, c=TITLE_COLOR, size='sm')
         ],
-        p=padding,
-        mt=mt,
-        style={
-            'background-color': '#FFFFFF',
-            'border-radius': '10px',
-            "boxShadow": "0px 4px 20px rgba(0, 0, 0, 0.1)",
-        }
+        gap='xs'
+    )
+
+
+def make_line_legend(label: str, style: str = 'dashed', color: str = 'gray') -> html.Div:
+    dash = '1px dashed' if style == 'dashed' else '2px solid'
+    return dmc.Group(
+        [
+            html.Div(style={
+                'height': '2px',
+                'width': '30px',
+                'border-top': f'{dash} {color}',
+            }),
+            dmc.Text(label, c=TITLE_COLOR, size='sm')
+        ],
+        align='center',
+        gap='xs'
     )
 
 
 def create_subcategory_layout(
         container_id,
         subcategory_title: str,
-        annotation_text: Optional[str] = None
+        annotation_text: Optional[str] = None,
+        is_first_category: bool = False
 ) -> list:
     return [
         dmc.Group(
             [
-                dmc.Title(subcategory_title, order=5, c=TITLE_COLOR),
-                dmc.Text(annotation_text, c='dimmed'),
+                dmc.Title(subcategory_title, order=4, c=TITLE_COLOR),
+                dmc.Text(annotation_text, c='dimmed', mt=2),
             ],
-            mt='xl',
+            mt='lg',
+            mb=0 if is_first_category else 'sm',
             gap='xs',
         ),
         dmc.Stack(
@@ -55,7 +66,7 @@ def create_subcategory_layout(
     ]
 
 
-def initialize_metric_panel(
+def add_header_to_panel(
         year_mode: str,
         year: str,
         quarter: Optional[str] = None
@@ -64,14 +75,23 @@ def initialize_metric_panel(
     return [
         dmc.Grid(
             [
-                dmc.GridCol(dmc.Text('Metric Name', ta='center'), span=1.5),
-                dmc.GridCol(dmc.Text('Target', ta='center'), span=6),
-                dmc.GridCol(dmc.Text(f'% Diff with {year_mode.upper()} {year} {quarter or ""}', ta='center'), span=4.5),
+                # dmc.GridCol(dmc.Text('Metric Name', ta='center'), span=1.5),
+                # dmc.GridCol(dmc.Text('Target', ta='center'), span=6),
+                dmc.GridCol(
+                    dmc.Text(
+                        f'% Change vs. {year_mode.upper()} {year} {quarter or ""}',
+                        ta='center',
+                        c='gray',
+                        size='sm',
+                    ),
+                    offset=7.5,
+                    span=4.5
+                ),
             ],
             gutter=0,
             align='center',
-            mb=15
-            # style={"marginBottom": "10px"}
+            # mt='xs',
+            mb='sm'
         )
     ]
 
@@ -93,15 +113,10 @@ def add_row_to_metric_panel(
                     ],
                     gutter=0,
                     align='center',
-                    # justify='center',
-                    # align="stretch",
-                    # style={"marginBottom": MARGIN_BOTTOM_METRIC}
                     mb=0
                 )
             ],
             id={'type': 'metric-panel-row', 'metric-slug': metric.slug},
-            # style={'border': 'solid 1px blue', 'background-color': 'red'},
-            # style={'border': 'solid 1px blue'},
         )
     )
 
@@ -109,8 +124,7 @@ def add_row_to_metric_panel(
 
 
 def add_metric_name_to_cell(metric_name: str) -> dmc.GridCol:
-    # return dmc.GridCol(dmc.Text(metric_name), span=1.5, style={'border': 'solid 1px red'})
-    return dmc.GridCol(dmc.Text(metric_name, ta='center'), span=1.8)
+    return dmc.GridCol(dmc.Text(metric_name, ta='center', size='sm'), span=1.8)
 
 
 def add_target_chart_to_cell(fig_target: Optional[Figure] = None) -> dmc.GridCol:
@@ -123,8 +137,8 @@ def add_target_chart_to_cell(fig_target: Optional[Figure] = None) -> dmc.GridCol
                 responsive=True
             ) if fig_target else NO_ENOUGH_DATA_LAYOUT
         ],
-        # style={'border': 'solid 1px blue'},
-        span=6.2
+        offset=0.1,
+        span=6.1
     )
 
 
@@ -138,7 +152,6 @@ def add_delta_bar_chart_to_cell(fig_delta: Optional[Figure] = None) -> dmc.GridC
                 responsive=True
             ) if fig_delta else NO_ENOUGH_DATA_LAYOUT
         ],
-        # style={'border': 'solid 1px green'},
         span=4
     )
 
@@ -187,7 +200,7 @@ def create_metrics_panel(
         ) if metric.value else None
 
         # Create delta bar chart to see the difference in % with previous year or previous quarter
-        fig_delta = make_delta_bar_chart(metric=metric) if metric.delta_pct else None
+        fig_delta = make_delta_bar_chart(metric=metric) if metric.delta_pct is not None else None
 
         # Create the complete row containing metric name, target chart and delta chart
         add_row_to_metric_panel(

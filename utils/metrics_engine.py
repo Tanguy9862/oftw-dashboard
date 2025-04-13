@@ -51,7 +51,7 @@ class Metric:
         if quarter_selected == 'all':
             self.target = target_annual
         else:
-            proportion_key = "quarter_proportion_fiscal" if year_mode == "fytd" else "quarter_proportion_civil"
+            proportion_key = "quarter_proportion_fiscal" if year_mode == "fy" else "quarter_proportion_civil"
             proportion_dict = data.get(proportion_key, {})
             proportion = proportion_dict.get(quarter_selected)
 
@@ -71,7 +71,7 @@ class Metric:
 
         Parameters:
         - year_selected (int): The reference year (e.g., 2025).
-        - year_mode (str): Either 'fytd' (fiscal year) or 'ytd' (calendar year).
+        - year_mode (str): Either 'fy' (fiscal year) or 'cy' (calendar year).
         - quarter_selected (str): Either 'all' or '1'-'4' to select a specific quarter.
         - today_override (pd.Timestamp, optional): Use this as "today" instead of the real date (for frozen datasets).
         """
@@ -85,15 +85,13 @@ class Metric:
         # Handle quarter mode
         if quarter_selected != 'all':
             quarter_selected = int(quarter_selected)
-            # print('-> Quarter selected:', quarter_selected)
 
-            if year_mode == 'fytd':
+            if year_mode == 'fy':
                 # Fiscal quarters: FY starts in July
                 fiscal_quarter_start_months = {1: 7, 2: 10, 3: 1, 4: 4}
                 fiscal_quarter_year_offset = {1: -1, 2: -1, 3: 0, 4: 0}
                 start_month = fiscal_quarter_start_months[quarter_selected]
                 start_year = year_selected + fiscal_quarter_year_offset[quarter_selected]
-                # print(f'> > Start year={start_year} / Start month={start_month}')
             else:
                 # Calendar quarters
                 start_month = (quarter_selected - 1) * 3 + 1
@@ -108,7 +106,7 @@ class Metric:
 
         else:
             # Full year mode
-            if year_mode == 'fytd':
+            if year_mode == 'fy':
                 start_date = pd.Timestamp(year_selected - 1, 7, 1)
                 end_date = pd.Timestamp(year_selected, 6, 30)
             else:
@@ -125,9 +123,6 @@ class Metric:
             return
 
         progress_ratio = min(days_elapsed / total_days, 1.0)
-
-        # pace_test = round(self.target * progress_ratio, 2)
-        # print('> pace:', pace_test)
         self.pace = round(self.target * progress_ratio, 2)
 
     def set_previous(self, df: pd.DataFrame):
@@ -153,12 +148,6 @@ class Metric:
         else:
             # Standard percent change
             self.delta_pct = round(((self.value - self.previous_value) / self.previous_value) * 100, 1)
-
-        # print(
-        #     f"[{self.name}] "
-        #     f"Current: {self.value}{self.unit}, Previous: {self.previous_value}{self.unit}, "
-        #     f"{'Delta (pp)' if self.is_rate_metric else 'Delta (%)'}: {self.delta_pct}"
-        # )
 
 
 class AmountMetric(TimeSeriesMixin, Metric):
@@ -209,10 +198,6 @@ class CountMetric(TimeSeriesMixin, Metric):
     def compute_on(self, df: pd.DataFrame) -> int:
         df_filtered = df.query("pledge_status in @self.status_to_filter")
         return df_filtered[self.target_col].nunique()
-
-    # def get_value_series(self, df: pd.DataFrame) -> pd.Series:
-    #     df_filtered = df.query("pledge_status in @self.status_to_filter")
-    #     return df_filtered[self.target_col]
 
     def aggregate_value(self, df: pd.DataFrame, group_cols: list) -> pd.DataFrame:
         """
@@ -273,15 +258,6 @@ class RateMetric(TimeSeriesMixin, Metric):
         matching = df.query("pledge_status in @self.status_to_filter")
         return round((matching.shape[0] / df.shape[0]) * 100, 1) if len(df) > 0 else 0.0
 
-    # def get_value_series(self, df: pd.DataFrame) -> pd.Series:
-    #     """
-    #     Returns a binary series (0/1) indicating whether each row matches the status filter.
-    #     This is used to later compute the rate by averaging over groups.
-    #     """
-    #     filtered = df.copy()
-    #     filtered["is_match"] = filtered["pledge_status"].isin(self.status_to_filter).astype(int)
-    #     return filtered["is_match"]
-
     def aggregate_value(self, df: pd.DataFrame, group_cols: list) -> pd.DataFrame:
         """
         Aggregates the rate by calculating the average of matching flags (0/1) per group.
@@ -334,15 +310,27 @@ class ARRMetric(TimeSeriesMixin, Metric):
 
         return df_unique_pledges['annualized_amount'].sum()
 
-    # def get_value_series(self, df: pd.DataFrame) -> pd.Series:
-    #     frequency_to_exclude = ['One-Time', 'Unspecified']
-    #     df = df.query("frequency not in @frequency_to_exclude")
-    #     df = df.query("pledge_status in @self.status_to_filter")
-    #     df = df.drop_duplicates(subset='pledge_id')
-    #
-    #     return df.apply(lambda x: FREQ_MULTIPLIER.get(x['frequency'], 0) * x['amount_usd'], axis=1)
-
     def aggregate_value(self, df: pd.DataFrame, group_cols: list) -> pd.DataFrame:
+        """
+        Aggregates ARR values by applying frequency-based annualization logic and filters.
+
+        Filters:
+            - Excludes one-time and unspecified donation frequencies.
+            - Keeps only pledges matching predefined status filters.
+            - Removes duplicate pledge entries.
+
+        Computation:
+            - Each pledge is annualized using a multiplier based on its frequency.
+            - The aggregated value is then summed per specified group columns.
+
+        Parameters:
+            df (pd.DataFrame): The input dataset containing pledge-level data.
+            group_cols (list): Columns to group by before aggregation.
+
+        Returns:
+            pd.DataFrame: Grouped and summed DataFrame with one row per group and
+                          a 'value' column representing total ARR.
+        """
         df = df.copy()
         df = df.query("frequency not in ['One-Time', 'Unspecified']")
         df = df.query("pledge_status in @self.status_to_filter")

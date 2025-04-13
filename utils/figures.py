@@ -16,7 +16,56 @@ from constants.colors import (
     AXIS_TICKFONTCOLOR, AXIS_LINECOLOR, GRID_COLOR, LEGEND_COLOR,
     HEADER_COLOR, BORDER_COLOR, TITLE_COLOR
 )
-from constants.charts import DEFAULT_PADDING, HOVERLABEL_TEMPLATE, BAR_CORNER_RADIUS, BAR_WIDTH
+from constants.charts import DEFAULT_PADDING, HOVERLABEL_TEMPLATE, BAR_CORNER_RADIUS, BAR_WIDTH, CUSTOM_FONT
+
+
+def build_value_only_chart(value: float, unit: str = "") -> go.Figure:
+    """
+    Creates a minimal chart displaying only the value centered with a horizontal baseline,
+    used when no target or pacing information is available.
+
+    Args:
+        value (float): Actual value to display.
+        unit (str): Unit of the metric (e.g., $, %, etc.).
+
+    Returns:
+        go.Figure: A plotly figure with centered value and baseline.
+    """
+    fig = go.Figure()
+
+    # Centered annotation
+    fig.add_annotation(
+        text=f"<b>{int(value):,}{unit}</b>",
+        x=0.5,
+        y=0,
+        xanchor="center",
+        yanchor="middle",
+        showarrow=False,
+        font=CUSTOM_FONT,
+        xref="x",
+        yref="y"
+    )
+
+    # Add horizontal separator line
+    fig.add_shape(
+        type="line",
+        x0=-110,
+        x1=110,
+        y0=-0.5,
+        y1=-0.5,
+        line=dict(color="lightgray", width=1),
+        xref="x",
+        yref="y"
+    )
+
+    fig.update_layout(
+        margin=dict(l=0, r=0, t=0, b=0),
+        xaxis=dict(range=[0, 1.1], visible=False),
+        yaxis=dict(visible=False, range=[-0.5, 0.5]),
+        showlegend=False,
+    )
+
+    return fig
 
 
 @apply_chart_styling
@@ -49,25 +98,10 @@ def make_target_bar_chart(
     """
 
     # Handle case where no target is available: fallback to label only
-    if target is None:
-        fig = go.Figure()
-        fig.add_annotation(
-            text=f"<b>{int(value):,}{unit}</b>",
-            y=metric_name,
-            showarrow=False,
-            font=dict(size=12, color="black"),
-            xref="x", yref="y",
-            xanchor="center",
-            yanchor="middle"
-        )
-        fig.update_layout(
-            height=30,
-            margin=dict(l=0, r=0, t=0, b=0),
-            xaxis=dict(range=[0, 1.1], visible=False),
-            yaxis=dict(showticklabels=False),
-            # plot_bgcolor=TRANSPARENT,
-        )
-        return fig
+    if not target:
+        return build_value_only_chart(value=value, unit=unit)
+
+    fig = go.Figure()
 
     # Normalize all values to max
     max_val = max_value or target
@@ -87,28 +121,34 @@ def make_target_bar_chart(
                 color = COLOR_NEGATIVE
         else:
             if value >= pace:
-                color = "#2CA58D"
                 color = COLOR_POSITIVE
             elif value >= 0.9 * pace:
-                # color = "#B2B2B2"
                 color = COLOR_NEUTRAL
             else:
-                # color = "#E4572E"
                 color = COLOR_NEGATIVE
     else:
         color = COLOR_POSITIVE
 
-    fig = go.Figure()
+    # Formatted pace and target
+    pace_ftd = format_metric_value(value=pace, unit=unit)
+    target_ftd = format_metric_value(value=target, unit=unit)
 
     # Add value bar
     fig.add_trace(go.Bar(
         x=[display_value],
-        y=[metric_name],
+        y=[""],
         orientation="h",
         marker_color=color,
         hoverinfo="skip",
         showlegend=False,
-        width=BAR_WIDTH
+        cliponaxis=False,
+        width=BAR_WIDTH,
+        customdata=[[pace_ftd, target_ftd]],
+        hovertemplate=(
+            "<b>Pace:</b> %{customdata[0]}<br>"
+            "<b>Target:</b> %{customdata[1]}"
+            "<extra></extra>"
+        )
     ))
 
     # Add pace and target markers
@@ -127,7 +167,11 @@ def make_target_bar_chart(
         x=label_x,
         y=metric_name,
         showarrow=False,
-        font=dict(size=12, color=label_color),
+        font=dict(
+            size=13,
+            color=label_color,
+            family=CUSTOM_FONT['family']
+        ),
         xref="x", yref="y",
         xanchor="left",
         yanchor="middle"
@@ -135,13 +179,15 @@ def make_target_bar_chart(
 
     # Layout settings
     fig.update_layout(
-        # height=60,
         margin=dict(l=0, r=0, t=0, b=0),
         xaxis=dict(range=[0, 1.1], visible=False),
-        yaxis=dict(visible=False, range=[-0.5, 0.5]),
-        # plot_bgcolor=TRANSPARENT,
+        yaxis=dict(visible=False, range=[-0.5, 0.5], showspikes=False),
+        plot_bgcolor=TRANSPARENT,
+        paper_bgcolor=TRANSPARENT,
         showlegend=False,
-        barcornerradius=4
+        barcornerradius=BAR_CORNER_RADIUS,
+        hovermode='y unified',
+        hoverlabel=HOVERLABEL_TEMPLATE
     )
 
     # Add horizontal separator line
@@ -160,7 +206,7 @@ def make_target_bar_chart(
 
 
 @apply_chart_styling
-def make_delta_bar_chart(metric) -> go.Figure:
+def make_delta_bar_chart(metric: Metric) -> go.Figure:
     """
     Generates a relative horizontal bar chart to visualize the difference between
     the current and previous period of a metric.
@@ -176,6 +222,8 @@ def make_delta_bar_chart(metric) -> go.Figure:
     Returns:
     - go.Figure: A Plotly horizontal bar chart centered at 0.
     """
+    current_val = format_metric_value(metric.value, metric.unit)
+    prev_val = format_metric_value(metric.previous_value, metric.unit)
     delta = metric.delta_pct
     delta_clamped = max(min(delta, 100), -100) if delta else 0
     is_positive = delta >= 0
@@ -185,10 +233,8 @@ def make_delta_bar_chart(metric) -> go.Figure:
     # Label: +X% or +Xpp depending on metric type
     suffix = "pp" if metric.is_rate_metric else "%"
     label = f"{delta:+.0f}{suffix}"
-    # label = f"{delta:+.0f}%" if not metric.is_rate_metric else f"{delta:+.0f}pp"
 
     # Bar color: blue if positive, orange if negative
-    # color = "#5DA5DA" if delta >= 0 else "#FAA43A"
     color = COLOR_POSITIVE if is_positive else COLOR_NEGATIVE
 
     fig = go.Figure()
@@ -205,8 +251,12 @@ def make_delta_bar_chart(metric) -> go.Figure:
         textfont=dict(color='white' if abs(delta) >= 90 else 'black'),
         cliponaxis=False,
         width=BAR_WIDTH,
-        hoverinfo='skip',
-        showlegend=False
+        showlegend=False,
+        customdata=[[prev_val, label]],
+        hovertemplate=(
+            "<b>Previous:</b> %{customdata[0]}<br>"
+            "<b>Change:</b> %{customdata[1]}<extra></extra>"
+        )
     ))
 
     # Dashed vertical center line at 0 (baseline)
@@ -226,10 +276,13 @@ def make_delta_bar_chart(metric) -> go.Figure:
 
     fig.update_layout(
         xaxis=dict(range=[-110, 110], visible=False),
-        yaxis=dict(visible=False, range=[-0.5, 0.5]),
+        yaxis=dict(visible=False, range=[-0.5, 0.5], showspikes=False),
         margin=dict(l=0, r=0, t=0, b=0),
-        # plot_bgcolor=TRANSPARENT,
-        barcornerradius=4
+        plot_bgcolor=TRANSPARENT,
+        paper_bgcolor=TRANSPARENT,
+        barcornerradius=BAR_CORNER_RADIUS,
+        hovermode='y unified',
+        hoverlabel=HOVERLABEL_TEMPLATE
     )
 
     return fig
